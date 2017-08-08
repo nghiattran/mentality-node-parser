@@ -63,7 +63,7 @@ describe('e2e tests', function() {
   it('test parser', function() {
     const forms = nodeParser.parseFile(sampleJSONFile);
     assert(forms.length === 1);
-    assert('desc' in forms[0].properties);
+    assert('description' in forms[0].properties);
     assert(forms[0].inputs.length === 2);
   });
 });

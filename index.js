@@ -5,7 +5,7 @@ const fs = require('fs');
 
 
 const UNPARSED_PROP = new Set([
-  'desc'
+  'description'
 ]);
 
 /**

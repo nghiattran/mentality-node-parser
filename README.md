@@ -1,5 +1,7 @@
 # mentality-node-parser
 
+Utility module used to parse layer node for mentality library.
+
 [![NPM version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Dependency Status][daviddm-image]][daviddm-url] [![Coverage percentage][coveralls-image]][coveralls-url]
 
 ## Installation
@@ -8,10 +10,79 @@
   npm install --save mentality-node-parser
 ```
 
-## Usage
+## Basic usage
+
+Sample JS file `input.js`:
+
+```
+/* 
+@form Node
+@description Node description here.
+
+@input          units
+@type           number
+
+@input          activation
+@type           text
+@description    Activation description here.
+ */
+
+
+// Some js here
+let a = 1 + 2;
+```
+
+### Parse a file.
 
 ```js
-var mentalityNodeParser = require('mentality-node-parser');
+const mentalityNodeParser = require('mentality-node-parser');
+const forms = mentalityNodeParser.parseFile('input.js');
+
+/*
+[{
+  name: 'Dense',
+  properties: {
+    type: 'text',
+    description: 'Node description here'
+  },
+  inputs: [{
+    name: 'units',
+    properties: {
+      type: 'number',
+      required: true
+    }
+  }, {
+    name: 'activation',
+    properties: {
+      type: 'text',
+      description: 'Activation description here.'
+    }
+  }]
+}]
+*/
+```
+
+### Generate HTML
+
+```js
+const input = forms[0].inputs;
+
+input[0].toHTML();
+
+// <input type="number" required="true">
+
+input[1].toHTML();
+
+// <input type="text">
+
+forms.toHTML()
+
+/*
+<form>
+  <input type="number" required="true">
+  <input type="text">
+</form>
+*/
 ```
 
 ## Getting To Know Yeoman
