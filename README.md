@@ -14,8 +14,8 @@ Utility module used to parse layer node for mentality library.
 
 Sample JS file `input.js`:
 
-```
-/* 
+```js
+/*
 @form Node
 @description Node description here.
 
