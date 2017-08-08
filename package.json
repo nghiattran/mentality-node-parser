@@ -1,14 +1,14 @@
 {
   "name": "mentality-node-parser",
-  "version": "0.0.0",
-  "description": "",
+  "version": "0.1.0",
+  "description": "Utility module used to parse layer node for mentality library.",
   "main": "index.js",
   "scripts": {
-    "test": "mocha",
-    "cover": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec"
+    "test": "nyc mocha",
+    "cover": "nyc --reporter=lcov npm test"
   },
   "engines": {
-    "node": ">=0.10.0"
+    "node": "v6"
   },
   "files": [
     "index.js"
@@ -21,11 +21,14 @@
   },
   "license": "MIT",
   "homepage": "",
-  "dependencies": {},
+  "dependencies": {
+    "babylon": "^6.17.4"
+  },
   "devDependencies": {
     "coveralls": "2.11.2",
-    "istanbul": "0.3.14",
+    "lodash": "^4.17.4",
     "mocha": "2.2.5",
-    "mocha-lcov-reporter": "0.0.2"
+    "mocha-lcov-reporter": "0.0.2",
+    "nyc": "^11.1.0"
   }
 }
