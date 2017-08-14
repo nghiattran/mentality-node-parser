@@ -22,7 +22,12 @@ function formHTMLGenerator(node, opts = {}) {
   } = opts;
 
   let attributes = '';
-  let properties = node.properties.map(property => indent + property.toHTML(inputHTMLGenerator, opts)).join('\n')
+
+  let properties = Object.keys(node.properties)
+    .map(key => 
+      indent + node.properties[key].toHTML(inputHTMLGenerator, opts)
+    ).join('\n');
+
   return `<node ${attributes}>\n${properties}\n</node>`;
 }
 
@@ -90,15 +95,15 @@ class Node {
   constructor(name) {
     this.name = name;
     this.attributes = {};
-    this.properties = [];
+    this.properties = {};
   }
 
   /**
    * Add an property entry to the node.
    * @param {property} property
    */
-  addInput(property) {
-    this.properties.push(property);
+  addProperty(property) {
+    this.properties[property.name] = property;
   }
 
   /**
@@ -106,7 +111,7 @@ class Node {
    * @param {String} key
    * @param {String} value
    */
-  addProperty(key, value) {
+  addAttribute(key, value) {
     this.attributes[key] = value;
   }
 
@@ -125,10 +130,17 @@ class Node {
    * @return {Object}
    */
   toJSON() {
+    const properties = {};
+    const keys = Object.keys(this.properties);
+
+    for (let i = 0; i < keys.length; i++) {
+      properties[keys[i]] = this.properties[keys[i]].toJSON();
+    }
+
     return {
+      properties,
       name: this.name,
       attributes: this.attributes,
-      properties: this.properties.map(property => property.toJSON()),
     };
   }
 
@@ -141,18 +153,20 @@ class Node {
     const {
       type,
       name,
-      properties,
-      attributes,
+      properties = {},
+      attributes = {},
     } = json;
 
     const node = new Node(name);
-    for (let i = 0; i < properties.length; i += 1) {
-      node.addInput(Property.fromJSON(properties[i]));
+    
+    const propertiesArr = Object.keys(properties).map(key => properties[key]);
+    for (let i = 0; i < propertiesArr.length; i++) {
+      node.addProperty(Property.fromJSON(propertiesArr[i]));
     }
-
-    const keys = Object.keys(attributes);
-    for (let i = 0; i < keys.length; i += 1) {
-      node.addProperty(keys[i], attributes[keys[i]]);
+    
+    const attributeKeys = Object.keys(attributes);
+    for (let i = 0; i < attributeKeys.length; i += 1) {
+      node.addAttribute(attributeKeys[i], attributes[attributeKeys[i]]);
     }
 
     return node;
@@ -170,7 +184,7 @@ class Property {
    * @param {String} key
    * @param {String} value
    */
-  addProperty(key, value) {
+  addAttribute(key, value) {
     this.attributes[key] = value;
   }
 
@@ -209,7 +223,7 @@ class Property {
     const property = new Property(name);
     const keys = Object.keys(attributes);
     for (let i = 0; i < keys.length; i += 1) {
-      property.addProperty(keys[i], attributes[keys[i]]);
+      property.addAttribute(keys[i], attributes[keys[i]]);
     }
 
     return property;
@@ -256,14 +270,14 @@ function parse(content, opts = {}) {
       case 'property':
         property = new InputNode(value);
         if (obj) {
-          obj.addInput(property);
+          obj.addProperty(property);
         } else {
           throw new Error('Missing Node.');
         }
         break;
       default:
         if (property) {
-          property.addProperty(key, value);
+          property.addAttribute(key, value);
         }
         break;
     }

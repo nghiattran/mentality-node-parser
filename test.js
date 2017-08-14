@@ -65,7 +65,8 @@ describe('unit tests', function() {
 
   it('test custom input HTML generator', function() {
     const node = nodeParser.parseFile(sampleJSONFile)[0];
-    const input = node.properties[0];
+    const properties = Object.keys(node.properties).map(key => node.properties[key]);
+    const input = properties[0];
     function HTMLGenerator(input, opts = {}) {
       const attributes = nodeParser.attributeHTMLGenerator(input.attributes);
       return `<input class="mentality-input" ${attributes}>`;
@@ -82,6 +83,6 @@ describe('e2e tests', function() {
     const nodes = nodeParser.parseFile(sampleJSONFile);
     assert(nodes.length === 1);
     assert('description' in nodes[0].attributes);
-    assert(nodes[0].properties.length === 2);
+    assert(Object.keys(nodes[0].properties).length === 2);
   });
 });
