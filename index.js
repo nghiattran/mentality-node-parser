@@ -2,49 +2,21 @@
 
 const babylon = require('babylon');
 const fs = require('fs');
+const glob = require("glob");
+const Promise = require('bluebird');
 
+const globAsync = Promise.promisify(glob);
 
 const UNPARSED_PROP = new Set([
   'description'
 ]);
 
 /**
- * Parse one line.
- * @param  {String} aline A line to be parsed.
- * @return {Object | undefined}       If the line is a valid entry, a object contains a key and a value is returned. Else, returns nothing.
- */
-function parseLine(aline = '') {
-  const line = aline.trim();
-
-  let key = '';
-  let firstWord = false;
-  let i = 0;
-  while (i < line.length && line[i] !== ' ' && !firstWord) {
-    if (line[i] === ' ') {
-      if (key) {
-        firstWord = true;
-      }
-    } else {
-      key += line[i];
-    }
-
-    i += 1;
-  }
-
-  if (key && key[0] === '@') {
-    return {
-      key: key.slice(1),
-      value: line.slice(i).trim(),
-    };
-  }
-}
-
-/**
  * Simple HTML generator for Form object.
  * @param  {Form}     form The form to be generated.
  * @return {String}        HTML string.
  */
-function formHTMLGenerator(form) {
+function formHTMLGenerator(form, opts = {}) {
   const {
     indent = '    ',
   } = opts;
@@ -54,28 +26,32 @@ function formHTMLGenerator(form) {
   return `<form ${properties}>\n${inputs}\n</form>`;
 }
 
-/**
- * Simple HTML generator for Input object.
- * @param  {Input}     input  The form to be generated.
- * @return {String}           HTML string.
- */
-function inputHTMLGenerator(input) {
+function propertyHTMLGenerator(propertyDict, opts = {}) {
   const {
     ignoreTag = UNPARSED_PROP
   } = opts;
 
   const properties = []
-  const keys = Object.keys(input.properties);
+  const keys = Object.keys(propertyDict);
   for (let i = 0; i < keys.length; i += 1) {
     const key = keys[i];
-    const value = input.properties[key];
+    const value = propertyDict[key];
 
     if (!ignoreTag.has(key)) {
       properties.push(`${key}="${value}"`)
     }
   }
+  return properties.join(' ');
+}
 
-  return `<input ${properties.join(' ')}>`;
+/**
+ * Simple HTML generator for Input object.
+ * @param  {Input}     input  The form to be generated.
+ * @return {String}           HTML string.
+ */
+function inputHTMLGenerator(input, opts = {}) {
+  const properties = propertyHTMLGenerator(input.properties, opts);
+  return `<input ${properties}>`;
 }
 
 /**
@@ -141,7 +117,7 @@ class Form {
    * @return {String}             HTML string.
    */
   toHTML(HTMLgenerator = formHTMLGenerator, opts = {}) {
-    return HTMLgenerator(this);
+    return HTMLgenerator(this, opts);
   }
 
   /**
@@ -200,7 +176,7 @@ class Input {
 
   /**
    * Convert this input to HTML string.
-   * @param  {Func} HTMLgenerator Function used to generate HTML. Default: `formHTMLGenerator`.
+   * @param  {Func} HTMLgenerator Function used to generate HTML. Default: `inputHTMLGenerator`.
    * @param  {Object} opts        options.
    * @return {String}             HTML string.
    */
@@ -307,7 +283,7 @@ function parse(content, opts = {}) {
  * @return {Form[]}         All forms in string.
  */
 function parseFile(file, opts = {}) {
-  const fileContent = fs.readFileSync('./samples/sample.js', {encoding:'utf-8'});
+  const fileContent = fs.readFileSync(file, {encoding:'utf-8'});
   const contentTree = babylon.parse(fileContent);
   const comments = contentTree.comments;
   let nodes = [];
@@ -326,8 +302,64 @@ function parseFile(file, opts = {}) {
   return nodes;
 }
 
+/**
+ * Parse one line.
+ * @param  {String} aline A line to be parsed.
+ * @return {Object | undefined}       If the line is a valid entry, a object contains a key and a value is returned. Else, returns nothing.
+ */
+function parseLine(aline = '') {
+  const line = aline.trim();
+
+  let key = '';
+  let firstWord = false;
+  let i = 0;
+  while (i < line.length && line[i] !== ' ' && !firstWord) {
+    if (line[i] === ' ') {
+      if (key) {
+        firstWord = true;
+      }
+    } else {
+      key += line[i];
+    }
+
+    i += 1;
+  }
+
+  if (key && key[0] === '@') {
+    return {
+      key: key.slice(1),
+      value: line.slice(i).trim(),
+    };
+  }
+}
+
+/**
+ * Parse entire modules given an array of globs.
+ * @param  {Array[Glob]}   paths
+ * @param  {Function} cb   
+ * @return {Promise} 
+ */
+function parseModule(paths, cb = () => {}) {
+  let nodes = [];
+  let promises = [];
+  for (let a = 0; a < paths.length; a += 1) {
+    promises.push(globAsync(paths[a]));
+  }
+
+  return Promise.all(promises)
+    .then((promiseRes) => {
+      for (let a = 0; a < promiseRes.length; a++) {
+        for (let b = 0; b < promiseRes[a].length; b++) {
+          nodes = nodes.concat(parseFile(promiseRes[a][b]));
+        }
+      }
+      return nodes;
+    })
+}
+
 module.exports = {
   parseLine,
+  parseModule,
   parse,
   parseFile,
   Input,
@@ -336,4 +368,5 @@ module.exports = {
   UNPARSED_PROP,
   formHTMLGenerator,
   inputHTMLGenerator,
+  propertyHTMLGenerator,
 };

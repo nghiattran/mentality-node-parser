@@ -23,7 +23,7 @@ const sourceContent = `
 
 `;
 
-const sampleJSONFile = path.join('samples', 'sample.json');
+const sampleJSONFile = path.join('samples', 'sample.js');
 
 describe('unit tests', function() {
   it('test Source', function() {
@@ -55,6 +55,24 @@ describe('unit tests', function() {
     const form1 = nodeParser.parseFile(sampleJSONFile)[0];
     const form2 = nodeParser.Form.fromJSON(form1.toJSON());
     assert(_.isEqual(form1.toJSON(), form2.toJSON()))
+  });
+
+  it('test Form', function() {
+    const form1 = nodeParser.parseFile(sampleJSONFile)[0];
+    const form2 = nodeParser.Form.fromJSON(form1.toJSON());
+    assert(_.isEqual(form1.toJSON(), form2.toJSON()))
+  });
+
+  it('test custom input HTML generator', function() {
+    const form = nodeParser.parseFile(sampleJSONFile)[0];
+    const input = form.inputs[0];
+    function HTMLGenerator(input, opts = {}) {
+      const properties = nodeParser.propertyHTMLGenerator(input.properties);
+      return `<input class="mentality-input" ${properties}>`;
+    }
+
+    const expectedResult = '<input class="mentality-input" type="number" required="true" step="0" min="1">';
+    assert(expectedResult === input.toHTML(HTMLGenerator));
   });
 });
 

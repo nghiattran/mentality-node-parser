@@ -22,7 +22,9 @@
   "license": "MIT",
   "homepage": "",
   "dependencies": {
-    "babylon": "^6.17.4"
+    "babylon": "^6.17.4",
+    "bluebird": "^3.5.0",
+    "glob": "^7.1.2"
   },
   "devDependencies": {
     "coveralls": "2.11.2",
