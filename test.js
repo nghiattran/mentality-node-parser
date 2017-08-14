@@ -51,24 +51,24 @@ describe('unit tests', function() {
     assert(i === 3);
   });
 
-  it('test Form', function() {
-    const form1 = nodeParser.parseFile(sampleJSONFile)[0];
-    const form2 = nodeParser.Form.fromJSON(form1.toJSON());
-    assert(_.isEqual(form1.toJSON(), form2.toJSON()))
+  it('test Node', function() {
+    const node1 = nodeParser.parseFile(sampleJSONFile)[0];
+    const node2 = nodeParser.Node.fromJSON(node1.toJSON());
+    assert(_.isEqual(node1.toJSON(), node2.toJSON()))
   });
 
-  it('test Form', function() {
-    const form1 = nodeParser.parseFile(sampleJSONFile)[0];
-    const form2 = nodeParser.Form.fromJSON(form1.toJSON());
-    assert(_.isEqual(form1.toJSON(), form2.toJSON()))
+  it('test Node', function() {
+    const node1 = nodeParser.parseFile(sampleJSONFile)[0];
+    const node2 = nodeParser.Node.fromJSON(node1.toJSON());
+    assert(_.isEqual(node1.toJSON(), node2.toJSON()))
   });
 
   it('test custom input HTML generator', function() {
-    const form = nodeParser.parseFile(sampleJSONFile)[0];
-    const input = form.inputs[0];
+    const node = nodeParser.parseFile(sampleJSONFile)[0];
+    const input = node.properties[0];
     function HTMLGenerator(input, opts = {}) {
-      const properties = nodeParser.propertyHTMLGenerator(input.properties);
-      return `<input class="mentality-input" ${properties}>`;
+      const attributes = nodeParser.attributeHTMLGenerator(input.attributes);
+      return `<input class="mentality-input" ${attributes}>`;
     }
 
     const expectedResult = '<input class="mentality-input" type="number" required="true" step="0" min="1">';
@@ -79,9 +79,9 @@ describe('unit tests', function() {
 
 describe('e2e tests', function() {
   it('test parser', function() {
-    const forms = nodeParser.parseFile(sampleJSONFile);
-    assert(forms.length === 1);
-    assert('description' in forms[0].properties);
-    assert(forms[0].inputs.length === 2);
+    const nodes = nodeParser.parseFile(sampleJSONFile);
+    assert(nodes.length === 1);
+    assert('description' in nodes[0].attributes);
+    assert(nodes[0].properties.length === 2);
   });
 });

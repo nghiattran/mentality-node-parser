@@ -12,50 +12,50 @@ const UNPARSED_PROP = new Set([
 ]);
 
 /**
- * Simple HTML generator for Form object.
- * @param  {Form}     form The form to be generated.
+ * Simple HTML generator for Node object.
+ * @param  {Node}     node The node to be generated.
  * @return {String}        HTML string.
  */
-function formHTMLGenerator(form, opts = {}) {
+function formHTMLGenerator(node, opts = {}) {
   const {
     indent = '    ',
   } = opts;
 
-  let properties = '';
-  let inputs = form.inputs.map(input => indent + input.toHTML(inputHTMLGenerator, opts)).join('\n')
-  return `<form ${properties}>\n${inputs}\n</form>`;
+  let attributes = '';
+  let properties = node.properties.map(property => indent + property.toHTML(inputHTMLGenerator, opts)).join('\n')
+  return `<node ${attributes}>\n${properties}\n</node>`;
 }
 
-function propertyHTMLGenerator(propertyDict, opts = {}) {
+function attributeHTMLGenerator(propertyDict, opts = {}) {
   const {
     ignoreTag = UNPARSED_PROP
   } = opts;
 
-  const properties = []
+  const attributes = []
   const keys = Object.keys(propertyDict);
   for (let i = 0; i < keys.length; i += 1) {
     const key = keys[i];
     const value = propertyDict[key];
 
     if (!ignoreTag.has(key)) {
-      properties.push(`${key}="${value}"`)
+      attributes.push(`${key}="${value}"`)
     }
   }
-  return properties.join(' ');
+  return attributes.join(' ');
 }
 
 /**
- * Simple HTML generator for Input object.
- * @param  {Input}     input  The form to be generated.
+ * Simple HTML generator for property object.
+ * @param  {property}     property  The node to be generated.
  * @return {String}           HTML string.
  */
-function inputHTMLGenerator(input, opts = {}) {
-  const properties = propertyHTMLGenerator(input.properties, opts);
-  return `<input ${properties}>`;
+function inputHTMLGenerator(property, opts = {}) {
+  const attributes = attributeHTMLGenerator(property.attributes, opts);
+  return `<input ${attributes}>`;
 }
 
 /**
- * Main object used to serve input string to parser.
+ * Main object used to serve property string to parser.
  */
 class Source {
   /**
@@ -68,7 +68,7 @@ class Source {
   }
 
   /**
-   * Get next token from input content. This function only returns `undefined` if there is nothing else to be parsed or a token object which contains a key and a value if a line is a valid entry.
+   * Get next token from property content. This function only returns `undefined` if there is nothing else to be parsed or a token object which contains a key and a value if a line is a valid entry.
    * @return {Object} Token.
    */
   getNext() {
@@ -84,34 +84,34 @@ class Source {
 }
 
 /**
- * Main class to handle forms.
+ * Main class to handle nodes.
  */
-class Form {
+class Node {
   constructor(name) {
     this.name = name;
-    this.properties = {};
-    this.inputs = [];
+    this.attributes = {};
+    this.properties = [];
   }
 
   /**
-   * Add an input entry to the form.
-   * @param {Input} input
+   * Add an property entry to the node.
+   * @param {property} property
    */
-  addInput(input) {
-    this.inputs.push(input);
+  addInput(property) {
+    this.properties.push(property);
   }
 
   /**
-   * Add a properties to the form.
+   * Add a attributes to the node.
    * @param {String} key
    * @param {String} value
    */
   addProperty(key, value) {
-    this.properties[key] = value;
+    this.attributes[key] = value;
   }
 
   /**
-   * Convert this form to HTML string.
+   * Convert this node to HTML string.
    * @param  {Func} HTMLgenerator Function used to generate HTML. Default: `formHTMLGenerator`.
    * @param  {Object} opts        options.
    * @return {String}             HTML string.
@@ -127,55 +127,55 @@ class Form {
   toJSON() {
     return {
       name: this.name,
-      properties: this.properties,
-      inputs: this.inputs.map(input => input.toJSON()),
+      attributes: this.attributes,
+      properties: this.properties.map(property => property.toJSON()),
     };
   }
 
   /**
-   * Construc form from JSON.
+   * Construc node from JSON.
    * @param  {Object} json 
-   * @return {Form}
+   * @return {Node}
    */
   static fromJSON(json) {
     const {
       type,
       name,
-      inputs,
       properties,
+      attributes,
     } = json;
 
-    const form = new Form(name);
-    for (let i = 0; i < inputs.length; i += 1) {
-      form.addInput(Input.fromJSON(inputs[i]));
+    const node = new Node(name);
+    for (let i = 0; i < properties.length; i += 1) {
+      node.addInput(Property.fromJSON(properties[i]));
     }
 
-    const keys = Object.keys(properties);
+    const keys = Object.keys(attributes);
     for (let i = 0; i < keys.length; i += 1) {
-      form.addProperty(keys[i], properties[keys[i]]);
+      node.addProperty(keys[i], attributes[keys[i]]);
     }
 
-    return form;
+    return node;
   }
 }
 
-class Input {
+class Property {
   constructor(name) {
     this.name = name;
-    this.properties = {};
+    this.attributes = {};
   }
 
   /**
-   * Add a properties to the form.
+   * Add a attributes to the node.
    * @param {String} key
    * @param {String} value
    */
   addProperty(key, value) {
-    this.properties[key] = value;
+    this.attributes[key] = value;
   }
 
   /**
-   * Convert this input to HTML string.
+   * Convert this property to HTML string.
    * @param  {Func} HTMLgenerator Function used to generate HTML. Default: `inputHTMLGenerator`.
    * @param  {Object} opts        options.
    * @return {String}             HTML string.
@@ -191,28 +191,28 @@ class Input {
   toJSON() {
     return {
       name: this.name,
-      properties: this.properties,
+      attributes: this.attributes,
     };
   }
 
   /**
-   * Construc input from JSON.
+   * Construc property from JSON.
    * @param  {Object} json 
-   * @return {Form}
+   * @return {Node}
    */
   static fromJSON(json) {
     const {
       name,
-      properties,
+      attributes,
     } = json;
 
-    const input = new Input(name);
-    const keys = Object.keys(properties);
+    const property = new Property(name);
+    const keys = Object.keys(attributes);
     for (let i = 0; i < keys.length; i += 1) {
-      input.addProperty(keys[i], properties[keys[i]]);
+      property.addProperty(keys[i], attributes[keys[i]]);
     }
 
-    return input;
+    return property;
   }
 }
 
@@ -220,7 +220,7 @@ class Input {
  * Parse docs given string.
  * @param  {String} content String to be parsed.
  * @param  {Object} opts    Options.
- * @return {Form[]}         All forms in string.
+ * @return {Node[]}         All nodes in string.
  */
 function parse(content, opts = {}) {
   const {
@@ -228,14 +228,14 @@ function parse(content, opts = {}) {
   } = opts;
 
   const {
-    InputNode = Input,
-    FormNode = Form,
+    InputNode = Property,
+    FormNode = Node,
   } = classes;
 
   const objs = [];
   const source = new Source(content);
 
-  let input;
+  let property;
   let obj;
   let token;
 
@@ -246,24 +246,24 @@ function parse(content, opts = {}) {
     } = token;
 
     switch (key) {
-      case 'form':
+      case 'node':
         if (obj) {
           objs.push(obj);
         }
         obj = new FormNode(value);
-        input = obj;
+        property = obj;
         break;
-      case 'input':
-        input = new InputNode(value);
+      case 'property':
+        property = new InputNode(value);
         if (obj) {
-          obj.addInput(input);
+          obj.addInput(property);
         } else {
-          throw new Error('Missing Form.');
+          throw new Error('Missing Node.');
         }
         break;
       default:
-        if (input) {
-          input.addProperty(key, value);
+        if (property) {
+          property.addProperty(key, value);
         }
         break;
     }
@@ -280,7 +280,7 @@ function parse(content, opts = {}) {
  * Parse docs given a file.
  * @param  {String} file    Filename.
  * @param  {Object} opts    Options.
- * @return {Form[]}         All forms in string.
+ * @return {Node[]}         All nodes in string.
  */
 function parseFile(file, opts = {}) {
   const fileContent = fs.readFileSync(file, {encoding:'utf-8'});
@@ -362,11 +362,11 @@ module.exports = {
   parseModule,
   parse,
   parseFile,
-  Input,
-  Form,
+  Property,
+  Node,
   Source,
   UNPARSED_PROP,
   formHTMLGenerator,
   inputHTMLGenerator,
-  propertyHTMLGenerator,
+  attributeHTMLGenerator,
 };
