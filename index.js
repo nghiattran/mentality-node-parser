@@ -28,7 +28,7 @@ function formHTMLGenerator(node, opts = {}) {
       indent + node.properties[key].toHTML(inputHTMLGenerator, opts)
     ).join('\n');
 
-  return `<node ${attributes}>\n${properties}\n</node>`;
+  return `<form ${attributes}>\n${properties}\n</form>`;
 }
 
 function attributeHTMLGenerator(propertyDict, opts = {}) {
@@ -195,7 +195,7 @@ class Property {
    * @return {String}             HTML string.
    */
   toHTML(HTMLgenerator = inputHTMLGenerator, opts = {}) {
-    return HTMLgenerator(this);
+    return HTMLgenerator(this, opts);
   }
 
   /**
